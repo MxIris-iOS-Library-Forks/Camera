@@ -202,11 +202,15 @@ private extension CameraMetalView {
 extension CameraMetalView: MTKViewDelegate {
     func draw(in view: MTKView) {
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
-              let ciImage = currentFrame,
-              let currentDrawable = view.currentDrawable
+              let ciImage = currentFrame
         else { return }
 
+        // Set drawable size BEFORE requesting currentDrawable.
+        // On iOS 15, requesting a drawable with zero/uninitialized size
+        // returns nil and never recovers, causing a permanent black preview.
         changeDrawableSize(view, ciImage)
+
+        guard let currentDrawable = view.currentDrawable else { return }
         renderView(view, currentDrawable, commandBuffer, ciImage)
         commitBuffer(currentDrawable, commandBuffer)
     }

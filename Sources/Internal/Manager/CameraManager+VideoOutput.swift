@@ -25,6 +25,14 @@ import MijickTimer
 extension CameraManagerVideoOutput {
     func setup(parent: CameraManager) throws(MCameraError) {
         self.parent = parent
+
+        // Only add AVCaptureMovieFileOutput when video recording is needed.
+        // On iOS 15, AVCaptureMovieFileOutput and AVCaptureVideoDataOutput
+        // cannot coexist in the same capture session. Adding the movie file
+        // output first causes canAddOutput to return false for the video data
+        // output (used by CameraMetalView for preview rendering), resulting
+        // in a black camera preview.
+        guard parent.attributes.outputType == .video else { return }
         try parent.captureSession.add(output: output)
     }
 }
